@@ -6,43 +6,43 @@
  *
  * This script is used to create and ingest large video files to Fedora Repo directly without islandora.
  *
- * Example usage: php fedora_ingest.php demo /absolute/path/to/ingest/directory
- *  the collection ingested will be demo:collection when collection argument is not specified in the command.
+ * Example usage:
+ * php fedora_ingest.php user=admin pass=password url=http://localhost:8080 ns=demo cmodel=islandora:sp_videoCModel \
+ * collection=demo:collection target=/absolute/path/to/ingest/directory email=admin@example.com
  *
- * Example usage: php fedora_ingest.php demo /absolute/path/to/ingest/directory email_address_to_notify my_new_collection
  */
-//error_reporting(E_ALL);
-//ini_set('display_errors', '1');
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
 
-if (PHP_SAPI === 'cli') {
-  $namespace = isset($argv[1]) ? trim($argv[1]) : null;
-  // It requires an absolute path
-  $ingest_dir = isset($argv[2]) ? trim($argv[2]) : null;
-  $email = isset($argv[3]) ? trim($argv[3]) : null;
-  $collection = isset($argv[4]) ? trim($argv[4]) : $namespace . ':collection';
-}
-else {
+// Only runs when more than arguments are passed
+if ($argc > 1) {
+  parse_str(implode('&', array_slice($argv, 1)), $_GET);
+
+  $username = isset($_GET['user']) ? trim($_GET['user']) : null;
+  $pass = isset($_GET['pass']) ? trim($_GET['pass']) : null;
+  $base_url = isset($_GET['url']) ? trim($_GET['url']) : null;
   $namespace = isset($_GET['ns']) ? trim($_GET['ns']) : null;
-  $ingest_dir = isset($_GET['dir']) ? trim($_GET['dir']) : null;
-  $collection = isset($_GET['col']) ? trim($_GET['col']) : $namespace . ':collection';
+  $model = isset($_GET['cmodel']) ? trim($_GET['cmodel']) : null;
+  $collection = isset($_GET['collection']) ? trim($_GET['collection']) : $namespace . ':collection';
+  $ingest_dir = isset($_GET['target']) ? trim($_GET['target']) : null;
   $email = isset($_GET['email']) ? trim($_GET['email']) : null;
-}
 
-if (empty($namespace) || empty($ingest_dir)) {
-  echo "Namespace and ingest directory are required! Please execute the script again!<br>\r\n";
-  echo "Example: php fedora_ingest.php demo /absolute/path/to/ingest/directory<br> \r\n";
+  if (empty($namespace) || empty($ingest_dir)) {
+    echo "Namespace and ingest directory are required! Please execute the script again!<br>\r\n";
+    echo "Example: php fedora_ingest.php user=admin pass=password url=http://localhost:8080 ns=demo cmodel=islandora:sp_videoCModel \ <br> \r\n";
+    echo "collection=demo:collection target=/absolute/path/to/ingest/directory email=admin@example.com<br> \r\n";
+    exit;
+  }
+
+} else {
+  echo "More than one arguments should be supplied. \r\n";
   exit;
 }
 
+
 /**
- * Configuration
+ * Log file information
  */
-$base_url = 'http://dsu-fedora.utsc.utoronto.ca:8080';
-$username = 'fedoraAdmin';
-$pass = 'fcw0wSuper';
-
-$model = 'islandora:sp_videoCModel';
-
 $log_file = 'ingest_' . date('Y_m_d') . '.log';
 $log_msg = date('Y-m-d H:i:s') . " Ingest job starting...\r\n";
 
