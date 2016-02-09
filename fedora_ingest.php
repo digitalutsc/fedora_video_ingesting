@@ -1,15 +1,15 @@
 #!/usr/bin/php
 <?php
 /**
- * Created by PhpStorm.
- * User: Lingling Jiang
+ * Author: Lingling Jiang
  *
  * This script is used to create and ingest large video files to Fedora Repo directly without islandora.
  *
  * Example usage:
  * php fedora_ingest.php user=admin pass=password url=http://localhost:8080 ns=demo cmodel=islandora:sp_videoCModel \
- * collection=demo:collection target=/absolute/path/to/ingest/directory email=admin@example.com
+ * collection=demo:collection target=/absolute/path/to/ingest/directory log=/absolute/path/to/ingest/directory email=admin@example.com
  *
+ * PHP version >= 5.3.0
  */
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
@@ -26,9 +26,10 @@ if ($argc > 1) {
   $collection = isset($_GET['collection']) ? trim($_GET['collection']) : $namespace . ':collection';
   $ingest_dir = isset($_GET['target']) ? trim($_GET['target']) : null;
   $email = isset($_GET['email']) ? trim($_GET['email']) : null;
+  $log_dir = isset($_GET['log']) ? trim($_GET['log']) : null;
 
   if (empty($namespace) || empty($ingest_dir)) {
-    echo "Namespace and ingest directory are required! Please execute the script again!<br>\r\n";
+    echo "Namespace and ingest target directory are required! Please execute the script again!<br>\r\n";
     echo "Example: php fedora_ingest.php user=admin pass=password url=http://localhost:8080 ns=demo cmodel=islandora:sp_videoCModel \ <br> \r\n";
     echo "collection=demo:collection target=/absolute/path/to/ingest/directory email=admin@example.com<br> \r\n";
     exit;
@@ -43,7 +44,12 @@ if ($argc > 1) {
 /**
  * Log file information
  */
-$log_file = 'ingest_' . date('Y_m_d') . '.log';
+if (is_null($log_dir)) {
+  $log_file = 'ingest_' . date('Y_m_d') . '.log';
+} else {
+  $log_file = $log_dir . '/ingest_' . date('Y_m_d') . '.log';
+}
+
 $log_msg = date('Y-m-d H:i:s') . " Ingest job starting...\r\n";
 
 
@@ -115,10 +121,25 @@ else {
   exit;
 }
 
-// Scan Ingest Dir for .mov file, .mp4 file, MODS.xml, TN.jpg to add datastreams.
+// Scan Ingest Dir is expected to be a parent dir to objects to be ingested.
+$dirs = new FilesystemIterator($ingest_dir);
+$dirs->setFlags(FilesystemIterator::UNIX_PATHS | FilesystemIterator::KEY_AS_FILENAME);
+// Get the sub-dir in a given ingest_dir from argument.
+foreach ($dirs as $dir) {
+  if ($dir->isDir()) {
+    $files = new FilesystemIterator($dir->getPathname());
+    $files->setFlags(FilesystemIterator::UNIX_PATHS | FilesystemIterator::KEY_AS_FILENAME);
+    foreach ($files as $file) {
+      if ($file->isFile()) {
+        // Process each file based on their extension or filename
+      }
+    }
+  }
+}
 
+// @todo rewrite the part below.
 $files = new FilesystemIterator($ingest_dir);
-$files->setFlags(FilesystemIterator::UNIX_PATHS);
+$files->setFlags(FilesystemIterator::UNIX_PATHS | FilesystemIterator::KEY_AS_FILENAME);
 foreach ($files as $file) {
   switch (strtolower($file->getExtension())) {
     case 'mov':
