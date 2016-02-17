@@ -11,4 +11,5 @@ Example usage:
  $php fedora_ingest.php user=fedoraAdmin pass=fedoraPassword url=http://this/fedora/URL ns=demo cmodel=islandora:sp_videoCModel \
   collection=demo:collection target=/absolute/path/to/ingest/directory log=/absolute/path/to/ingest/directory email=admin@example.com
 ```
+url is the base url of the fedora server (like http://localhost:8080).
 target, log, email arguments are optional.

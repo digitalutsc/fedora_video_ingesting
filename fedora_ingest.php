@@ -45,7 +45,7 @@ if ($argc > 1) {
  * Log file information
  */
 if (is_null($log_dir)) {
-  $log_file = 'ingest_' . date('Y_m_d') . '.log';
+  $log_file = __DIR__ . '/ingest_' . date('Y_m_d') . '.log';
 } else {
   $log_file = $log_dir . '/ingest_' . date('Y_m_d') . '.log';
 }
