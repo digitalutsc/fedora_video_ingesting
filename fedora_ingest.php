@@ -60,6 +60,7 @@ $log_msg = date('Y-m-d H:i:s') . " Ingest job starting...\r\n";
 // Scan Ingest Dir is expected to be a parent dir to objects to be ingested.
 $dirs = new FilesystemIterator($ingest_dir);
 $dirs->setFlags(FilesystemIterator::UNIX_PATHS | FilesystemIterator::KEY_AS_FILENAME);
+
 // Get the sub-dir in a given ingest_dir from argument.
 foreach ($dirs as $dir) {
   if ($dir->isDir()) {
@@ -88,8 +89,7 @@ foreach ($dirs as $dir) {
     $dom->load($xml);
 
 
-// update obj xml with new PID
-
+  // update obj xml with new PID
     $foxmlObject = $dom->getElementsByTagNameNS('info:fedora/fedora-system:def/foxml#', 'digitalObject')->item(0);
     $foxmlObject->setAttribute('PID', $pid);
 
@@ -120,6 +120,7 @@ foreach ($dirs as $dir) {
       "Content-type: text/xml",
     );
 
+    // Create fedora object via curl function.
     $response = run_curl($url, $username, $pass, $headers, $dom->saveXML());
 
     if ($response['httpcode'] == 201) {
@@ -137,7 +138,6 @@ foreach ($dirs as $dir) {
     foreach ($files as $file) {
       if ($file->isFile()) {
         // Process each file based on their extension or filename
-//        fedora_ingest_add_ds($base_url, $object_id, $fpath, $fname, $fmime);
         if (strtolower($file->getExtension()) == 'mov') {
           $url = $base_url . '/fedora/objects/' . $pid . '/datastreams/OBJ?controlGroup=M&dsLabel=OBJ&mimeType=video/quicktime';
           if (function_exists('curl_file_create')) { // PHP 5.5+
@@ -238,150 +238,11 @@ foreach ($dirs as $dir) {
             exit;
           }
         }
-
-        if (strtolower($file->getFilename()) == 'transcript.xml') {
-          $url = $base_url . '/fedora/objects/' . $pid . '/datastreams/TRANSCRIPT?controlGroup=M&dsLabel=TRANSCRIPT&mimeType=application/xml';
-          if (function_exists('curl_file_create')) { // PHP 5.5+
-            $request = array(
-              'file' => curl_file_create($file->getPathname(), 'application/xml', $file->getFilename())
-            );
-          }
-          else {
-            $request = array(
-              'file' => '@' . $file->getPathname()
-            );
-          }
-
-          $response = run_curl($url, $username, $pass, NULL, $request);
-          if ($response['httpcode'] == 201) {
-            $log_msg .= date('Y-m-d H:i:s') . " " . $pid. " TRANSCRIPT datastream is created and ingested successfully\r\n";
-            $pid = $resXML->pid;
-          }
-          else {
-            $log_msg .= date('Y-m-d H:i:s') . " " . $pid. " TRANSCRIPT datastream failed\r\n";
-            echo "Failed to create TRANSCRIPT datastream for " . $pid . " ... exit the script!<br>\r\n";
-            exit;
-          }
-        }
-
-
       } // End Process each file based on their extension or filename
     }
   }
 }
 
-// @todo rewrite the part below.
-//$files = new FilesystemIterator($ingest_dir);
-//$files->setFlags(FilesystemIterator::UNIX_PATHS | FilesystemIterator::KEY_AS_FILENAME);
-//foreach ($files as $file) {
-//  switch (strtolower($file->getExtension())) {
-//    case 'mov':
-//      $url = $base_url . '/fedora/objects/' . $pid . '/datastreams/OBJ?controlGroup=M&dsLabel=OBJ&mimeType=video/quicktime';
-//      if (function_exists('curl_file_create')) { // PHP 5.5+
-//        $request = array(
-//          'file' => curl_file_create($file->getPathname(), 'video/quicktime', $file->getFilename())
-//        );
-//      }
-//      else {
-//        $request = array(
-//          'file' => '@' . $file->getPathname()
-//        );
-//      }
-//
-//      $response = run_curl($url, $username, $pass, NULL, $request);
-//      if ($response['httpcode'] == 201) {
-//        $log_msg .= date('Y-m-d H:i:s') . " " . $pid. " OBJ datastream is created and ingested successfully\r\n";
-//        $pid = $resXML->pid;
-//      }
-//      else {
-//        $log_msg .= date('Y-m-d H:i:s') . " " . $pid. " OBJ datastream failed\r\n";
-//        echo "Failed to create OBJ datastream for " . $pid . " ... exit the script!<br>\r\n";
-//        exit;
-//      }
-//      break;
-//
-//    case 'mp4':
-//      $url = $base_url . '/fedora/objects/' . $pid . '/datastreams/MP4?controlGroup=M&dsLabel=MP4&mimeType=video/mp4';
-//      if (function_exists('curl_file_create')) { // PHP 5.5+
-//        $request = array(
-//          'file' => curl_file_create($file->getPathname(), 'video/mp4', $file->getFilename())
-//        );
-//      }
-//      else {
-//        $request = array(
-//          'file' => '@' . $file->getPathname()
-//        );
-//      }
-//
-//      $response = run_curl($url, $username, $pass, NULL, $request);
-//      if ($response['httpcode'] == 201) {
-//        $log_msg .= date('Y-m-d H:i:s') . " " . $pid. " MP4 datastream is created and ingested successfully\r\n";
-//        $pid = $resXML->pid;
-//      }
-//      else {
-//        $log_msg .= date('Y-m-d H:i:s') . " " . $pid. " MP4 datastream failed\r\n";
-//        echo "Failed to create MP4 datastream for " . $pid . " ... exit the script!<br>\r\n";
-//        exit;
-//      }
-//      break;
-//
-//    case 'xml':
-//      $url = $base_url . '/fedora/objects/' . $pid . '/datastreams/MODS?controlGroup=M&dsLabel=MODS&mimeType=text/xml';
-//      if (function_exists('curl_file_create')) { // PHP 5.5+
-//        $request = array(
-//          'file' => curl_file_create($file->getPathname(), 'text/xml', $file->getFilename())
-//        );
-//      }
-//      else {
-//        $request = array(
-//          'file' => '@' . $file->getPathname()
-//        );
-//      }
-//
-//      $response = run_curl($url, $username, $pass, NULL, $request);
-//      if ($response['httpcode'] == 201) {
-//        $log_msg .= date('Y-m-d H:i:s') . " " . $pid. " MODS datastream is created and ingested successfully\r\n";
-//        $pid = $resXML->pid;
-//      }
-//      else {
-//        $log_msg .= date('Y-m-d H:i:s') . " " . $pid. " MODs datastream failed\r\n";
-//        echo "Failed to create MODS datastream for " . $pid . " ... exit the script!<br>\r\n";
-//        exit;
-//      }
-//      break;
-//
-//    case 'jpg':
-//      $url = $base_url . '/fedora/objects/' . $pid . '/datastreams/TN?controlGroup=M&dsLabel=TN&mimeType=image/jpeg';
-//      if (function_exists('curl_file_create')) { // PHP 5.5+
-//        $request = array(
-//          'file' => curl_file_create($file->getPathname(), 'image/jpeg', $file->getFilename())
-//        );
-//      }
-//      else {
-//        $request = array(
-//          'file' => '@' . $file->getPathname()
-//        );
-//      }
-//
-//      $response = run_curl($url, $username, $pass, NULL, $request);
-//      if ($response['httpcode'] == 201) {
-//        $log_msg .= date('Y-m-d H:i:s') . " " . $pid. " TN datastream is created and ingested successfully\r\n";
-//        $pid = $resXML->pid;
-//      }
-//      else {
-//        $log_msg .= date('Y-m-d H:i:s') . " " . $pid. " TN datastream failed\r\n";
-//        echo "Failed to create TN datastream for " . $pid . " ... exit the script!<br>\r\n";
-//        exit;
-//      }
-//      break;
-//
-//    default:
-//      $log_msg .= date('Y-m-d H:i:s') . " " . $file->getFilename() . " is not a .mov file, .mp4 file, MODS.xml or TN.jpg. Exit the script ..\r\n";
-//      echo $file->getFilename() . ' is not a .mov file, .mp4 file, MODS.xml or TN.jpg. Exit the script ...';
-//      exit;
-//      break;
-//  }
-//}
 
 // Log message
 $log_msg .= date('Y-m-d H:i:s') . " " . $pid . " Ingest job is done\r\n";
