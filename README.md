@@ -10,7 +10,7 @@ PHP version > 5.3.0 with libcurl library.
   * user : fedora username (required)
   * pass : fedora user password (required)
   * url : fedora REST API url, such as ttp://localhost:8080 (required)
-  * ns : the namespace of the target collection on Islandora
+  * ns : the namespace of the target collection on Islandora (required)
   * cmodel : the PID of the Islandora Content Model, can be either islandora:sp_videoCModel or islandora:oralhistoriesCModel (required)
   * collection : the PID of the target collection on Islandora (required)
   * target : the absolute directory path on the server which holds all ready-for-ingest files (required)
@@ -19,19 +19,21 @@ PHP version > 5.3.0 with libcurl library.
   
 ## Folder structure of ready-for-ingest files
   * top-ingest-folder/
-  ** ingest-object-1/
-  *** video1.mov
-  *** video2.mp4
-  *** mods.xml
-  *** tn1.jpg or tn1.png
-  ** ingest-object-2/
-  *** video2.mov
-  *** video2.mp4
-  *** mods.xml
-  *** tn2.jpg or tn2.png
+      * ingest-object-1/
+          * video1.mov
+          * video2.mp4
+          * mods.xml
+          * tn1.jpg or tn1.png
+      * ingest-object-2/
+          * video2.mov
+          * video2.mp4
+          * mods.xml
+          * tn2.jpg or tn2.png
+          
+  The script will ingest two video objects to the target collection with above folder structure.
 
 ## Example usage:
 ```
  $php fedora_ingest.php user=fedoraAdmin pass=fedoraPassword url=http://this/fedora/URL ns=demo cmodel=islandora:sp_videoCModel \
-  collection=demo:collection target=/absolute/path/to/ingest/directory log=/absolute/path/to/ingest/directory email=admin@example.com
+  collection=demo:collection target=/absolute/path/to/top-ingest-folder log=/absolute/path/to/ingest/directory email=admin@example.com
 ```
