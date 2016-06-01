@@ -1,7 +1,7 @@
 #!/usr/bin/php
 <?php
 /**
- * Author: Lingling Jiang
+ * Author: Lingling Jiang, edits Kim
  *
  * This script is used to create and ingest large video files to Fedora Repo directly without islandora.
  *
