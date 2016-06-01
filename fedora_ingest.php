@@ -96,35 +96,17 @@ $files = new FilesystemIterator($dir->getPathname());
 
          if (strtolower($file->getFilename()) == 'mods.xml') {
 
-  // addition of getting label from MODS - kp
-    // $modsTitle = $dom->getElementsByTagNameNS('http://www.loc.gov/mods/v3', 'mods')->item(0);
-
-  // update obj xml with new PID
+// update obj xml with new PID
 
     $foxmlObject = $dom->getElementsByTagNameNS('info:fedora/fedora-system:def/foxml#', 'digitalObject')->item(0);
     $foxmlObject->setAttribute('PID', $pid);
 
-    // $foxmlProperty = $dom->getElementsByTagNameNS('info:fedora/fedora-system:def/foxml#', 'property');
-    // foreach ( $foxmlProperty as $property) {
-    //   if (trim($property->getAttribute('NAME') == 'info:fedora/fedora-system:def/model#label')) {
-    //     $property->setAttribute('VALUE', $pid);
-    //   }
-    // }
-
-//kp my attempts again
+//grabbing from mods metadata the title
 
           $modsItem = new DomDocument();
           $modsItem->load($file);
-          // ($form_values['mods']['mods_record']);
           $mods_title_info = $modsItem->getElementsByTagNameNS('http://www.loc.gov/mods/v3', 'title')->item(0)->nodeValue;
           echo $mods_title_info;
-          // $mods_title_info = $modsItem->getElementsByTagNameNS('http://www.loc.gov/mods/v3', 'titleInfo')->item(0);
-          // $title = '';
-          // foreach (array('nonSort', 'title') as $title_field) {
-          //   $title .= $mods_title_info->getElementsByTagNameNS('http://www.loc.gov/mods/v3', $title_field)->item(0)->nodeValue;
-          // }
-
-//kp my attempts end here
 
     $foxmlProperty = $dom->getElementsByTagNameNS('info:fedora/fedora-system:def/foxml#', 'property');
         foreach ( $foxmlProperty as $property) {
@@ -242,13 +224,12 @@ $files = new FilesystemIterator($dir->getPathname());
             );
           }
 
-
           $response = run_curl($url, $username, $pass, NULL, $request);
           if ($response['httpcode'] == 201) {
             $log_msg .= date('Y-m-d H:i:s') . " " . $pid. " MODS datastream is created and ingested successfully\r\n";
             $pid = $resXML->pid;
-
           }
+
           else {
             $log_msg .= date('Y-m-d H:i:s') . " " . $pid. " MODS datastream failed\r\n";
             echo "Failed to create MODS datastream for " . $pid . " ... exit the script!<br>\r\n";
