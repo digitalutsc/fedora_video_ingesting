@@ -1,7 +1,7 @@
 #!/usr/bin/php
 <?php
 /**
- * Author: Lingling Jiang
+ * Author: Lingling Jiang, edits Kim
  *
  * This script is used to create and ingest large video files to Fedora Repo directly without islandora.
  *
@@ -89,20 +89,37 @@ foreach ($dirs as $dir) {
     $dom->load($xml);
 
 
-  // update obj xml with new PID
+$files = new FilesystemIterator($dir->getPathname());
+    $files->setFlags(FilesystemIterator::UNIX_PATHS | FilesystemIterator::KEY_AS_FILENAME);
+    foreach ($files as $file) {
+      if ($file->isFile()) {
+
+         if (strtolower($file->getFilename()) == 'mods.xml') {
+
+// update obj xml with new PID
+
     $foxmlObject = $dom->getElementsByTagNameNS('info:fedora/fedora-system:def/foxml#', 'digitalObject')->item(0);
     $foxmlObject->setAttribute('PID', $pid);
 
-    $foxmlProperty = $dom->getElementsByTagNameNS('info:fedora/fedora-system:def/foxml#', 'property');
-    foreach ( $foxmlProperty as $property) {
-      if (trim($property->getAttribute('NAME') == 'info:fedora/fedora-system:def/model#label')) {
-        $property->setAttribute('VALUE', $pid);
-      }
-    }
+//grabbing from mods metadata the title
 
+          $modsItem = new DomDocument();
+          $modsItem->load($file);
+          $mods_title_info = $modsItem->getElementsByTagNameNS('http://www.loc.gov/mods/v3', 'title')->item(0)->nodeValue;
+          echo $mods_title_info;
+
+    $foxmlProperty = $dom->getElementsByTagNameNS('info:fedora/fedora-system:def/foxml#', 'property');
+        foreach ( $foxmlProperty as $property) {
+          if (trim($property->getAttribute('NAME') == 'info:fedora/fedora-system:def/model#label')) {
+            $property->setAttribute('VALUE', $mods_title_info);
+          }
+        }
 
     $dcTitle = $dom->getElementsByTagNameNS('http://purl.org/dc/elements/1.1/', 'title')->item(0);
-    $dcTitle->nodeValue = $pid;
+    $dcTitle->nodeValue = $mods_title_info;
+  }
+}
+}
 
     $dcIdentifier = $dom->getElementsByTagNameNS('http://purl.org/dc/elements/1.1/', 'identifier')->item(0);
     $dcIdentifier->nodeValue = $pid;
@@ -140,6 +157,7 @@ foreach ($dirs as $dir) {
         // Process each file based on their extension or filename
         if (strtolower($file->getExtension()) == 'mov') {
           $url = $base_url . '/fedora/objects/' . $pid . '/datastreams/OBJ?controlGroup=M&dsLabel=OBJ&mimeType=video/quicktime';
+
           if (function_exists('curl_file_create')) { // PHP 5.5+
             $request = array(
               'file' => curl_file_create($file->getPathname(), 'video/quicktime', $file->getFilename())
@@ -190,6 +208,7 @@ foreach ($dirs as $dir) {
 
         if (strtolower($file->getFilename()) == 'mods.xml') {
           $url = $base_url . '/fedora/objects/' . $pid . '/datastreams/MODS?controlGroup=M&dsLabel=MODS&mimeType=text/xml';
+
           if (function_exists('curl_file_create')) { // PHP 5.5+
             $request = array(
               'file' => curl_file_create($file->getPathname(), 'text/xml', $file->getFilename())
@@ -206,6 +225,7 @@ foreach ($dirs as $dir) {
             $log_msg .= date('Y-m-d H:i:s') . " " . $pid. " MODS datastream is created and ingested successfully\r\n";
             $pid = $resXML->pid;
           }
+
           else {
             $log_msg .= date('Y-m-d H:i:s') . " " . $pid. " MODS datastream failed\r\n";
             echo "Failed to create MODS datastream for " . $pid . " ... exit the script!<br>\r\n";
@@ -242,7 +262,6 @@ foreach ($dirs as $dir) {
     }
   }
 }
-
 
 // Log message
 $log_msg .= date('Y-m-d H:i:s') . " " . $pid . " Ingest job is done\r\n";
