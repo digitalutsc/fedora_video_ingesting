@@ -89,7 +89,12 @@ foreach ($dirs as $dir) {
     $dom->load($xml);
 
 
+$files = new FilesystemIterator($dir->getPathname());
+    $files->setFlags(FilesystemIterator::UNIX_PATHS | FilesystemIterator::KEY_AS_FILENAME);
+    foreach ($files as $file) {
+      if ($file->isFile()) {
 
+         if (strtolower($file->getFilename()) == 'mods.xml') {
 
   // addition of getting label from MODS - kp
     // $modsTitle = $dom->getElementsByTagNameNS('http://www.loc.gov/mods/v3', 'mods')->item(0);
@@ -99,17 +104,44 @@ foreach ($dirs as $dir) {
     $foxmlObject = $dom->getElementsByTagNameNS('info:fedora/fedora-system:def/foxml#', 'digitalObject')->item(0);
     $foxmlObject->setAttribute('PID', $pid);
 
-    $foxmlProperty = $dom->getElementsByTagNameNS('info:fedora/fedora-system:def/foxml#', 'property');
-    foreach ( $foxmlProperty as $property) {
-      if (trim($property->getAttribute('NAME') == 'info:fedora/fedora-system:def/model#label')) {
-        $property->setAttribute('VALUE', $pid);
-      }
-    }
+    // $foxmlProperty = $dom->getElementsByTagNameNS('info:fedora/fedora-system:def/foxml#', 'property');
+    // foreach ( $foxmlProperty as $property) {
+    //   if (trim($property->getAttribute('NAME') == 'info:fedora/fedora-system:def/model#label')) {
+    //     $property->setAttribute('VALUE', $pid);
+    //   }
+    // }
 
+//kp my attempts again
+
+          $modsItem = new DomDocument();
+          $modsItem->load($file);
+          // ($form_values['mods']['mods_record']);
+          $mods_title_info = $modsItem->getElementsByTagNameNS('http://www.loc.gov/mods/v3', 'title')->item(0)->nodeValue;
+          echo $mods_title_info;
+          // $mods_title_info = $modsItem->getElementsByTagNameNS('http://www.loc.gov/mods/v3', 'titleInfo')->item(0);
+          // $title = '';
+          // foreach (array('nonSort', 'title') as $title_field) {
+          //   $title .= $mods_title_info->getElementsByTagNameNS('http://www.loc.gov/mods/v3', $title_field)->item(0)->nodeValue;
+          // }
+
+//kp my attempts end here
+
+    $foxmlProperty = $dom->getElementsByTagNameNS('info:fedora/fedora-system:def/foxml#', 'property');
+        foreach ( $foxmlProperty as $property) {
+          if (trim($property->getAttribute('NAME') == 'info:fedora/fedora-system:def/model#label')) {
+            $property->setAttribute('VALUE', $mods_title_info);
+          }
+        }
+
+    $dcTitle = $dom->getElementsByTagNameNS('http://purl.org/dc/elements/1.1/', 'title')->item(0);
+    $dcTitle->nodeValue = $mods_title_info;
+  }
+}
+}
 
   // changed $pid to modsTitle - kp
-    $dcTitle = $dom->getElementsByTagNameNS('http://purl.org/dc/elements/1.1/', 'title')->item(0);
-    $dcTitle->nodeValue = $pid;
+    // $dcTitle = $dom->getElementsByTagNameNS('http://purl.org/dc/elements/1.1/', 'title')->item(0);
+    // $dcTitle->nodeValue = $pid;
 
     $dcIdentifier = $dom->getElementsByTagNameNS('http://purl.org/dc/elements/1.1/', 'identifier')->item(0);
     $dcIdentifier->nodeValue = $pid;
@@ -199,8 +231,6 @@ foreach ($dirs as $dir) {
         if (strtolower($file->getFilename()) == 'mods.xml') {
           $url = $base_url . '/fedora/objects/' . $pid . '/datastreams/MODS?controlGroup=M&dsLabel=MODS&mimeType=text/xml';
 
-
-
           if (function_exists('curl_file_create')) { // PHP 5.5+
             $request = array(
               'file' => curl_file_create($file->getPathname(), 'text/xml', $file->getFilename())
@@ -217,30 +247,6 @@ foreach ($dirs as $dir) {
           if ($response['httpcode'] == 201) {
             $log_msg .= date('Y-m-d H:i:s') . " " . $pid. " MODS datastream is created and ingested successfully\r\n";
             $pid = $resXML->pid;
-
-//my attempts again
-
-          $modsItem = new DomDocument();
-          $modsItem->load($file);
-          // ($form_values['mods']['mods_record']);
-          $mods_title_info = $modsItem->getElementsByTagNameNS('http://www.loc.gov/mods/v3', 'title')->item(0);
-          // $mods_title_info = $modsItem->getElementsByTagNameNS('http://www.loc.gov/mods/v3', 'titleInfo')->item(0);
-          // $title = '';
-          // foreach (array('nonSort', 'title') as $title_field) {
-          //   $title .= $mods_title_info->getElementsByTagNameNS('http://www.loc.gov/mods/v3', $title_field)->item(0)->nodeValue;
-          // }
-
-          $foxmlProperty = $dom->getElementsByTagNameNS('info:fedora/fedora-system:def/foxml#', 'property');
-              foreach ( $foxmlProperty as $property) {
-                if (trim($property->getAttribute('NAME') == 'info:fedora/fedora-system:def/model#label')) {
-                  $property->setAttribute('VALUE', $mods_title_info);
-                }
-              }
-
-          $dcTitle = $dom->getElementsByTagNameNS('http://purl.org/dc/elements/1.1/', 'title')->item(0);
-          $dcTitle->nodeValue = $title;
-
-//my attempts end here
 
           }
           else {
@@ -279,7 +285,6 @@ foreach ($dirs as $dir) {
     }
   }
 }
-
 
 // Log message
 $log_msg .= date('Y-m-d H:i:s') . " " . $pid . " Ingest job is done\r\n";
