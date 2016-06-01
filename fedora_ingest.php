@@ -121,10 +121,6 @@ $files = new FilesystemIterator($dir->getPathname());
 }
 }
 
-  // changed $pid to modsTitle - kp
-    // $dcTitle = $dom->getElementsByTagNameNS('http://purl.org/dc/elements/1.1/', 'title')->item(0);
-    // $dcTitle->nodeValue = $pid;
-
     $dcIdentifier = $dom->getElementsByTagNameNS('http://purl.org/dc/elements/1.1/', 'identifier')->item(0);
     $dcIdentifier->nodeValue = $pid;
 
