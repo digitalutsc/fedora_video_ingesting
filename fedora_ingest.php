@@ -88,6 +88,12 @@ foreach ($dirs as $dir) {
     $dom->formatOutput = true;
     $dom->load($xml);
 
+// update obj xml with new PID
+
+          $foxmlObject = $dom->getElementsByTagNameNS('info:fedora/fedora-system:def/foxml#', 'digitalObject')->item(0);
+          $foxmlObject->setAttribute('PID', $pid);
+
+// get the title from MODS
 
 $files = new FilesystemIterator($dir->getPathname());
     $files->setFlags(FilesystemIterator::UNIX_PATHS | FilesystemIterator::KEY_AS_FILENAME);
@@ -96,30 +102,24 @@ $files = new FilesystemIterator($dir->getPathname());
 
          if (strtolower($file->getFilename()) == 'mods.xml') {
 
-// update obj xml with new PID
-
-    $foxmlObject = $dom->getElementsByTagNameNS('info:fedora/fedora-system:def/foxml#', 'digitalObject')->item(0);
-    $foxmlObject->setAttribute('PID', $pid);
-
 //grabbing from mods metadata the title
 
           $modsItem = new DomDocument();
           $modsItem->load($file);
           $mods_title_info = $modsItem->getElementsByTagNameNS('http://www.loc.gov/mods/v3', 'title')->item(0)->nodeValue;
-          echo $mods_title_info;
+          echo $mods_title_info . "\n";
 
-    $foxmlProperty = $dom->getElementsByTagNameNS('info:fedora/fedora-system:def/foxml#', 'property');
-        foreach ( $foxmlProperty as $property) {
-          if (trim($property->getAttribute('NAME') == 'info:fedora/fedora-system:def/model#label')) {
-            $property->setAttribute('VALUE', $mods_title_info);
-          }
+          $foxmlProperty = $dom->getElementsByTagNameNS('info:fedora/fedora-system:def/foxml#', 'property');
+              foreach ( $foxmlProperty as $property) {
+                if (trim($property->getAttribute('NAME') == 'info:fedora/fedora-system:def/model#label')) {
+                  $property->setAttribute('VALUE', $mods_title_info);
+                }
+              }
+          $dcTitle = $dom->getElementsByTagNameNS('http://purl.org/dc/elements/1.1/', 'title')->item(0);
+          $dcTitle->nodeValue = $mods_title_info;
         }
-
-    $dcTitle = $dom->getElementsByTagNameNS('http://purl.org/dc/elements/1.1/', 'title')->item(0);
-    $dcTitle->nodeValue = $mods_title_info;
-  }
-}
-}
+      }
+    }
 
     $dcIdentifier = $dom->getElementsByTagNameNS('http://purl.org/dc/elements/1.1/', 'identifier')->item(0);
     $dcIdentifier->nodeValue = $pid;
