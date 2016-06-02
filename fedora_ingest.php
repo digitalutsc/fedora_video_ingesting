@@ -100,8 +100,7 @@ $files = new FilesystemIterator($dir->getPathname());
     foreach ($files as $file) {
       if ($file->isFile()) {
 
-// $mods_lowercase_file = strtolower($file) = 'mods.xml';
-         if file_exists((strtolower($file->getFilename()) == 'mods.xml')) {
+         if (strtolower($file->getFilename()) == 'mods.xml') {
 
 //grabbing from mods metadata the title
 
@@ -118,9 +117,6 @@ $files = new FilesystemIterator($dir->getPathname());
               }
           $dcTitle = $dom->getElementsByTagNameNS('http://purl.org/dc/elements/1.1/', 'title')->item(0);
           $dcTitle->nodeValue = $mods_title_info;
-        }
-        else {
-          echo "The file $file does not exist";
         }
       }
     }
