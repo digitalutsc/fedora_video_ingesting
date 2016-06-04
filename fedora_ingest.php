@@ -233,7 +233,7 @@ $files = new FilesystemIterator($dir->getPathname());
           }
         }
 
-        if (strtolower($file->getExtension()) == 'jpg' || strtolower($file->getExtension()) == 'png') {
+        if (strtolower($file->getExtension()) == 'jpg' || strtolower($file->getExtension()) == 'jpeg'  || strtolower($file->getExtension()) == 'png') {
           $mime = (strtolower($file->getExtension()) == 'jpg') ? 'image/jpeg' : 'image/png';
           $url = $base_url . '/fedora/objects/' . $pid . '/datastreams/TN?controlGroup=M&dsLabel=TN&mimeType=' . $mime;
           if (function_exists('curl_file_create')) { // PHP 5.5+
